@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Cat, Heart, Info, Paw, Camera, Sparkles } from "lucide-react";
+import { Cat, Heart, Info, Paw, Camera, Sparkles, Star, Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const catBreeds = [
   { name: "Siamese", origin: "Thailand", temperament: "Vocal, Affectionate, Intelligent", image: "https://upload.wikimedia.org/wikipedia/commons/2/25/Siam_lilacpoint.jpg", description: "Known for their distinctive color points and blue almond-shaped eyes." },
@@ -31,20 +33,20 @@ const catFacts = [
   "The oldest known pet cat was found in a 9,500-year-old grave on Cyprus.",
 ];
 
-const CatCard = ({ breed, origin, temperament, image, description }) => (
+const CatCard = ({ breed, origin, temperament, image, description, isDarkMode }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
     transition={{ type: "spring", stiffness: 300 }}
   >
-    <Card className="mb-4 overflow-hidden h-full">
+    <Card className={`mb-4 overflow-hidden h-full ${isDarkMode ? 'bg-gray-700 text-white' : ''}`}>
       <img src={image} alt={breed} className="w-full h-48 object-cover" />
       <CardHeader>
         <CardTitle>{breed}</CardTitle>
-        <CardDescription>Origin: {origin}</CardDescription>
+        <CardDescription className={isDarkMode ? 'text-gray-300' : ''}>Origin: {origin}</CardDescription>
       </CardHeader>
       <CardContent>
         <p className="mb-2"><strong>Temperament:</strong> {temperament}</p>
-        <p className="text-sm text-gray-600">{description}</p>
+        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{description}</p>
       </CardContent>
     </Card>
   </motion.div>
@@ -63,6 +65,7 @@ const Index = () => {
   const [likes, setLikes] = useState(0);
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [catName, setCatName] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -89,34 +92,50 @@ const Index = () => {
     });
   }, [toast]);
 
+  const toggleDarkMode = useCallback(() => {
+    setIsDarkMode((prev) => !prev);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-b from-purple-100 to-pink-100'}`}>
       <div className="max-w-6xl mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-6 mb-8"
+          className={`${isDarkMode ? 'bg-gray-800' : 'bg-white/80'} backdrop-blur-sm rounded-lg shadow-lg p-6 mb-8`}
         >
-          <h1 className="text-6xl font-bold mb-2 text-center text-purple-800 flex items-center justify-center">
+          <h1 className={`text-6xl font-bold mb-2 text-center ${isDarkMode ? 'text-purple-300' : 'text-purple-800'} flex items-center justify-center`}>
             <Cat className="mr-2 text-pink-500" /> Purrfect Cats
           </h1>
-          <p className="text-xl text-center text-gray-600 mb-4">Discover the wonderful world of felines!</p>
+          <p className={`text-xl text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Discover the wonderful world of felines!</p>
+          <div className="flex justify-center items-center mt-4">
+            <Label htmlFor="dark-mode" className="mr-2">
+              {isDarkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </Label>
+            <Switch
+              id="dark-mode"
+              checked={isDarkMode}
+              onCheckedChange={toggleDarkMode}
+            />
+          </div>
         </motion.div>
 
-        <div className="bg-yellow-100 rounded-lg p-4 mb-8 overflow-hidden relative">
-          <motion.p
+        <AnimatePresence mode="wait">
+          <motion.div
             key={currentFactIndex}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5 }}
-            className="text-lg text-gray-800 italic"
+            className={`${isDarkMode ? 'bg-yellow-900' : 'bg-yellow-100'} rounded-lg p-4 mb-8 overflow-hidden relative`}
           >
-            <Info className="inline mr-2 h-5 w-5 text-yellow-600" />
-            {catFacts[currentFactIndex]}
-          </motion.p>
-        </div>
+            <p className={`text-lg ${isDarkMode ? 'text-yellow-100' : 'text-gray-800'} italic`}>
+              <Info className="inline mr-2 h-5 w-5 text-yellow-600" />
+              {catFacts[currentFactIndex]}
+            </p>
+          </motion.div>
+        </AnimatePresence>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -127,10 +146,12 @@ const Index = () => {
             <CarouselContent>
               {catBreeds.map((breed, index) => (
                 <CarouselItem key={index}>
-                  <img
+                  <motion.img
                     src={breed.image}
                     alt={breed.name}
                     className="mx-auto object-cover w-full h-[400px] rounded-lg shadow-lg"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
                   />
                 </CarouselItem>
               ))}
@@ -146,20 +167,20 @@ const Index = () => {
             <TabsTrigger value="breeds">Cat Breeds</TabsTrigger>
           </TabsList>
           <TabsContent value="about">
-            <Card>
+            <Card className={isDarkMode ? 'bg-gray-800 text-white' : ''}>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Paw className="mr-2 text-pink-500" />
                   Fascinating Felines
                 </CardTitle>
-                <CardDescription>Learn about the charm and characteristics of cats</CardDescription>
+                <CardDescription className={isDarkMode ? 'text-gray-300' : ''}>Learn about the charm and characteristics of cats</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-lg text-gray-700 mb-4">
+                <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-4`}>
                   Cats are fascinating creatures that have been domesticated for thousands of years. They are known for their independence, agility, and affectionate nature.
                 </p>
                 <h3 className="text-xl font-semibold mb-2">Characteristics of Cats</h3>
-                <ul className="list-disc list-inside mb-4 text-gray-700">
+                <ul className={`list-disc list-inside mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   <li>Excellent hunters with sharp claws and teeth</li>
                   <li>Flexible bodies and quick reflexes</li>
                   <li>Keen senses, especially their night vision</li>
@@ -170,18 +191,18 @@ const Index = () => {
             </Card>
           </TabsContent>
           <TabsContent value="breeds">
-            <Card>
+            <Card className={isDarkMode ? 'bg-gray-800 text-white' : ''}>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Camera className="mr-2 text-pink-500" />
                   Popular Cat Breeds
                 </CardTitle>
-                <CardDescription>Explore some of the most beloved cat breeds</CardDescription>
+                <CardDescription className={isDarkMode ? 'text-gray-300' : ''}>Explore some of the most beloved cat breeds</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {catBreeds.map((breed, index) => (
-                    <CatCard key={index} {...breed} />
+                    <CatCard key={index} {...breed} isDarkMode={isDarkMode} />
                   ))}
                 </div>
               </CardContent>
@@ -190,13 +211,22 @@ const Index = () => {
         </Tabs>
 
         <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
-          <Button 
-            variant="outline" 
-            onClick={handleLike}
-            className="flex items-center"
-          >
-            <Heart className="mr-2 h-4 w-4 text-red-500" /> Like
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  onClick={handleLike}
+                  className="flex items-center"
+                >
+                  <Heart className="mr-2 h-4 w-4 text-red-500" /> Like
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Show some love!</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Badge variant="secondary" className="text-lg">
             {likes} {likes === 1 ? 'Like' : 'Likes'}
           </Badge>
@@ -206,11 +236,20 @@ const Index = () => {
               placeholder="Generated cat name"
               value={catName}
               readOnly
-              className="w-48"
+              className={`w-48 ${isDarkMode ? 'bg-gray-700 text-white' : ''}`}
             />
-            <Button onClick={handleGenerateName} className="flex items-center">
-              <Sparkles className="mr-2 h-4 w-4" /> Generate Name
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={handleGenerateName} className="flex items-center">
+                    <Sparkles className="mr-2 h-4 w-4" /> Generate Name
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Create a unique cat name!</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </div>
